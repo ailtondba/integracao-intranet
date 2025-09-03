@@ -1,250 +1,338 @@
 /**
- * Configuração de Exemplo para Integração Paperless-NGX
+ * Configuração de Exemplo - Paperless-NGX Integração Intranet
  * 
- * Este arquivo contém as configurações necessárias para integrar
- * o Paperless-NGX com sua intranet corporativa.
+ * Este arquivo contém exemplos de configuração para integração do Paperless-NGX
+ * com sistemas de intranet corporativa.
+ * 
+ * IMPORTANTE: Copie este arquivo para 'config.js' e ajuste as configurações
+ * conforme seu ambiente.
  */
 
-// Configuração da API do Paperless-NGX
-const PAPERLESS_CONFIG = {
-    // URL base do seu servidor Paperless-NGX
-    BASE_URL: 'http://localhost:8000',
+// ============================================================================
+// CONFIGURAÇÕES PRINCIPAIS
+// ============================================================================
+
+const PaperlessConfig = {
+    // URL base da API do Paperless-NGX
+    apiUrl: 'https://paperless.suaempresa.com/api',
     
-    // Token de API (obtenha em: Configurações > API Tokens)
-    API_TOKEN: 'seu_token_aqui',
+    // Token de autenticação da API
+    // ATENÇÃO: Nunca commite tokens reais no repositório!
+    apiToken: 'SEU_TOKEN_AQUI',
+    
+    // Configurações de timeout
+    timeout: 30000, // 30 segundos
     
     // Configurações de paginação
-    DEFAULT_PAGE_SIZE: 20,
-    MAX_PAGE_SIZE: 100,
-    
-    // Timeout para requisições (em milissegundos)
-    REQUEST_TIMEOUT: 30000,
+    pagination: {
+        defaultPageSize: 25,
+        maxPageSize: 100
+    },
     
     // Configurações de cache
-    CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
-    
-    // Endpoints da API
-    ENDPOINTS: {
-        DOCUMENTS: '/api/documents/',
-        TAGS: '/api/tags/',
-        DOCUMENT_TYPES: '/api/document_types/',
-        CORRESPONDENTS: '/api/correspondents/',
-        SEARCH: '/api/documents/',
-        DOWNLOAD: '/api/documents/{id}/download/',
-        PREVIEW: '/api/documents/{id}/preview/',
-        THUMBNAIL: '/api/documents/{id}/thumb/'
+    cache: {
+        enabled: true,
+        duration: 300000 // 5 minutos
     }
 };
 
-// Configuração da Interface
-const UI_CONFIG = {
+// ============================================================================
+// CONFIGURAÇÕES DE INTERFACE
+// ============================================================================
+
+const UIConfig = {
     // Tema da interface
-    THEME: {
-        PRIMARY_COLOR: '#667eea',
-        SECONDARY_COLOR: '#764ba2',
-        SUCCESS_COLOR: '#28a745',
-        WARNING_COLOR: '#ffc107',
-        DANGER_COLOR: '#dc3545',
-        INFO_COLOR: '#17a2b8'
+    theme: {
+        primaryColor: '#2563eb',
+        secondaryColor: '#64748b',
+        successColor: '#059669',
+        warningColor: '#d97706',
+        errorColor: '#dc2626'
     },
     
-    // Textos da interface
-    LABELS: {
-        SEARCH_PLACEHOLDER: 'Digite um termo para buscar documentos...',
-        NO_RESULTS: 'Nenhum documento encontrado para esta busca.',
-        LOADING: 'Buscando documentos...',
-        ERROR_TITLE: 'Erro ao buscar documentos',
-        TOTAL_DOCS: 'Total de Documentos',
-        CATEGORIES: 'Categorias',
-        DOCUMENT_TYPES: 'Tipos',
-        LAST_SEARCH: 'Última Busca'
+    // Configurações de busca
+    search: {
+        placeholder: 'Buscar documentos...',
+        minLength: 3,
+        debounceDelay: 300,
+        showSuggestions: true,
+        maxSuggestions: 5
     },
     
     // Configurações de exibição
-    DISPLAY: {
-        SHOW_PREVIEW: true,
-        SHOW_TAGS: true,
-        SHOW_METADATA: true,
-        SHOW_STATISTICS: true,
-        PREVIEW_LENGTH: 400,
-        DATE_FORMAT: 'pt-BR'
+    display: {
+        showThumbnails: true,
+        showPreview: true,
+        showMetadata: true,
+        dateFormat: 'DD/MM/YYYY',
+        timeFormat: 'HH:mm'
+    },
+    
+    // Configurações de download
+    download: {
+        enabled: true,
+        showProgress: true,
+        allowBulkDownload: false
     }
 };
 
-// Configuração de Segurança
-const SECURITY_CONFIG = {
-    // CORS - Configure no servidor Paperless-NGX
-    ALLOWED_ORIGINS: [
-        'http://localhost:3000',
-        'http://sua-intranet.empresa.com',
-        'https://sua-intranet.empresa.com'
-    ],
-    
-    // Rate Limiting (implementar no servidor)
-    RATE_LIMIT: {
-        REQUESTS_PER_MINUTE: 60,
-        REQUESTS_PER_HOUR: 1000
+// ============================================================================
+// CONFIGURAÇÕES DE SEGURANÇA
+// ============================================================================
+
+const SecurityConfig = {
+    // Configurações CORS
+    cors: {
+        allowedOrigins: [
+            'https://intranet.suaempresa.com',
+            'https://portal.suaempresa.com'
+        ],
+        allowCredentials: true
     },
     
-    // Validação de entrada
-    INPUT_VALIDATION: {
-        MAX_QUERY_LENGTH: 500,
-        ALLOWED_CHARACTERS: /^[a-zA-Z0-9\s\-_.,!?()\[\]"']+$/,
-        SANITIZE_HTML: true
+    // Configurações de CSP (Content Security Policy)
+    csp: {
+        enabled: true,
+        directives: {
+            'default-src': ["'self'"],
+            'script-src': ["'self'", "'unsafe-inline'"],
+            'style-src': ["'self'", "'unsafe-inline'"],
+            'img-src': ["'self'", 'data:', 'https:'],
+            'connect-src': ["'self'", 'https://paperless.suaempresa.com']
+        }
+    },
+    
+    // Configurações de rate limiting
+    rateLimit: {
+        enabled: true,
+        maxRequests: 100,
+        windowMs: 60000 // 1 minuto
     }
 };
 
-// Configuração de Performance
-const PERFORMANCE_CONFIG = {
-    // Debounce para busca em tempo real (em milissegundos)
-    SEARCH_DEBOUNCE: 300,
-    
-    // Cache de metadados
-    METADATA_CACHE_DURATION: 10 * 60 * 1000, // 10 minutos
-    
-    // Lazy loading de imagens
-    LAZY_LOAD_IMAGES: true,
-    
-    // Compressão de requisições
-    ENABLE_COMPRESSION: true
-};
+// ============================================================================
+// CONFIGURAÇÕES DE LOGGING
+// ============================================================================
 
-// Configuração de Logging
-const LOGGING_CONFIG = {
-    // Nível de log (debug, info, warn, error)
-    LOG_LEVEL: 'info',
+const LoggingConfig = {
+    level: 'info', // debug, info, warn, error
+    console: true,
+    file: false,
+    remote: false,
     
-    // Logs no console
-    CONSOLE_LOGGING: true,
-    
-    // Logs para servidor (opcional)
-    SERVER_LOGGING: {
-        ENABLED: false,
-        ENDPOINT: '/api/logs',
-        BATCH_SIZE: 10
+    // Configurações para log remoto (opcional)
+    remote_config: {
+        url: 'https://logs.suaempresa.com/api/logs',
+        apiKey: 'SEU_LOG_API_KEY'
     }
 };
 
-// Configuração de Integração
-const INTEGRATION_CONFIG = {
-    // Modo de integração
-    MODE: 'api', // 'api' ou 'iframe'
-    
-    // Configurações do iframe (se MODE = 'iframe')
-    IFRAME: {
-        WIDTH: '100%',
-        HEIGHT: '600px',
-        SANDBOX: 'allow-same-origin allow-scripts allow-forms',
-        ALLOW_FULLSCREEN: true
+// ============================================================================
+// CONFIGURAÇÕES DE INTEGRAÇÃO
+// ============================================================================
+
+const IntegrationConfig = {
+    // Configurações para iframe
+    iframe: {
+        enabled: true,
+        sandbox: 'allow-same-origin allow-scripts allow-forms',
+        width: '100%',
+        height: '800px',
+        border: 'none',
+        borderRadius: '8px'
     },
     
-    // SSO (Single Sign-On)
-    SSO: {
-        ENABLED: false,
-        PROVIDER: 'oauth2', // 'oauth2', 'saml', 'ldap'
-        AUTO_LOGIN: false
+    // Configurações para widget
+    widget: {
+        enabled: true,
+        container: '#paperless-widget',
+        autoInit: true,
+        responsive: true
     },
     
-    // Webhooks (para sincronização)
-    WEBHOOKS: {
-        ENABLED: false,
-        ENDPOINTS: {
-            DOCUMENT_CREATED: '/webhook/document-created',
-            DOCUMENT_UPDATED: '/webhook/document-updated',
-            DOCUMENT_DELETED: '/webhook/document-deleted'
+    // Configurações para SSO (Single Sign-On)
+    sso: {
+        enabled: false,
+        provider: 'saml', // saml, oauth2, ldap
+        config: {
+            // Configurações específicas do provedor
         }
     }
 };
 
-// Exportar configurações
+// ============================================================================
+// CONFIGURAÇÕES DE PERFORMANCE
+// ============================================================================
+
+const PerformanceConfig = {
+    // Lazy loading
+    lazyLoading: {
+        enabled: true,
+        threshold: 100, // pixels
+        placeholder: '/assets/images/loading.svg'
+    },
+    
+    // Compressão de imagens
+    imageCompression: {
+        enabled: true,
+        quality: 0.8,
+        maxWidth: 1920,
+        maxHeight: 1080
+    },
+    
+    // Prefetch de recursos
+    prefetch: {
+        enabled: true,
+        maxConcurrent: 3
+    }
+};
+
+// ============================================================================
+// CONFIGURAÇÕES DE DESENVOLVIMENTO
+// ============================================================================
+
+const DevelopmentConfig = {
+    debug: false,
+    mockData: false,
+    showPerformanceMetrics: false,
+    enableHotReload: false
+};
+
+// ============================================================================
+// EXPORTAÇÃO DA CONFIGURAÇÃO
+// ============================================================================
+
+// Para uso em Node.js
 if (typeof module !== 'undefined' && module.exports) {
-    // Node.js
     module.exports = {
-        PAPERLESS_CONFIG,
-        UI_CONFIG,
-        SECURITY_CONFIG,
-        PERFORMANCE_CONFIG,
-        LOGGING_CONFIG,
-        INTEGRATION_CONFIG
+        PaperlessConfig,
+        UIConfig,
+        SecurityConfig,
+        LoggingConfig,
+        IntegrationConfig,
+        PerformanceConfig,
+        DevelopmentConfig
     };
-} else {
-    // Browser
-    window.PaperlessIntegrationConfig = {
-        PAPERLESS_CONFIG,
-        UI_CONFIG,
-        SECURITY_CONFIG,
-        PERFORMANCE_CONFIG,
-        LOGGING_CONFIG,
-        INTEGRATION_CONFIG
+}
+
+// Para uso no browser
+if (typeof window !== 'undefined') {
+    window.PaperlessConfig = PaperlessConfig;
+    window.UIConfig = UIConfig;
+    window.SecurityConfig = SecurityConfig;
+    window.LoggingConfig = LoggingConfig;
+    window.IntegrationConfig = IntegrationConfig;
+    window.PerformanceConfig = PerformanceConfig;
+    window.DevelopmentConfig = DevelopmentConfig;
+}
+
+// ============================================================================
+// FUNÇÕES UTILITÁRIAS
+// ============================================================================
+
+/**
+ * Valida se a configuração está correta
+ * @returns {boolean} True se válida, false caso contrário
+ */
+function validateConfig() {
+    const errors = [];
+    
+    // Validar URL da API
+    if (!PaperlessConfig.apiUrl || !PaperlessConfig.apiUrl.startsWith('http')) {
+        errors.push('URL da API inválida');
+    }
+    
+    // Validar token
+    if (!PaperlessConfig.apiToken || PaperlessConfig.apiToken === 'SEU_TOKEN_AQUI') {
+        errors.push('Token da API não configurado');
+    }
+    
+    // Validar timeout
+    if (PaperlessConfig.timeout < 1000) {
+        errors.push('Timeout muito baixo (mínimo 1000ms)');
+    }
+    
+    if (errors.length > 0) {
+        console.error('Erros de configuração:', errors);
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Obtém a configuração completa mesclada
+ * @returns {Object} Configuração completa
+ */
+function getFullConfig() {
+    return {
+        paperless: PaperlessConfig,
+        ui: UIConfig,
+        security: SecurityConfig,
+        logging: LoggingConfig,
+        integration: IntegrationConfig,
+        performance: PerformanceConfig,
+        development: DevelopmentConfig
     };
 }
 
 /**
- * Instruções de Uso:
- * 
- * 1. Copie este arquivo para config.js
- * 2. Ajuste as configurações conforme sua necessidade
- * 3. Configure o CORS no Paperless-NGX:
- *    - Adicione PAPERLESS_CORS_ALLOWED_HOSTS no docker-compose.env
- *    - Exemplo: PAPERLESS_CORS_ALLOWED_HOSTS=http://localhost:3000,http://sua-intranet.com
- * 
- * 4. Obtenha o Token da API:
- *    - Acesse o Paperless-NGX
- *    - Vá em Configurações > API Tokens
- *    - Crie um novo token
- *    - Cole o token em API_TOKEN
- * 
- * 5. Teste a integração:
- *    - Abra o arquivo busca-simples.html ou busca-avancada.html
- *    - Configure a URL e Token
- *    - Teste a busca
- * 
- * 6. Personalize a interface:
- *    - Ajuste as cores em UI_CONFIG.THEME
- *    - Modifique os textos em UI_CONFIG.LABELS
- *    - Configure a exibição em UI_CONFIG.DISPLAY
- * 
- * 7. Implemente segurança:
- *    - Configure CORS adequadamente
- *    - Implemente rate limiting
- *    - Valide todas as entradas do usuário
- *    - Use HTTPS em produção
+ * Inicializa a configuração
  */
+function initConfig() {
+    if (!validateConfig()) {
+        throw new Error('Configuração inválida. Verifique os parâmetros.');
+    }
+    
+    console.log('Configuração inicializada com sucesso');
+    
+    if (DevelopmentConfig.debug) {
+        console.log('Configuração completa:', getFullConfig());
+    }
+}
 
-/**
- * Exemplo de uso no HTML:
- * 
- * <script src="config/config.js"></script>
- * <script>
- *     const config = window.PaperlessIntegrationConfig;
- *     
- *     // Usar configurações
- *     const apiUrl = config.PAPERLESS_CONFIG.BASE_URL;
- *     const token = config.PAPERLESS_CONFIG.API_TOKEN;
- *     
- *     // Fazer requisição
- *     fetch(`${apiUrl}/api/documents/`, {
- *         headers: {
- *             'Authorization': `Token ${token}`
- *         }
- *     });
- * </script>
- */
+// Exportar funções utilitárias
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports.validateConfig = validateConfig;
+    module.exports.getFullConfig = getFullConfig;
+    module.exports.initConfig = initConfig;
+}
 
-/**
- * Exemplo de configuração do CORS no Paperless-NGX:
- * 
- * No arquivo docker-compose.env, adicione:
- * 
- * # CORS Configuration
- * PAPERLESS_CORS_ALLOWED_HOSTS=http://localhost:3000,http://sua-intranet.empresa.com,https://sua-intranet.empresa.com
- * PAPERLESS_ALLOWED_HOSTS=localhost,sua-intranet.empresa.com
- * 
- * # Security Headers
- * PAPERLESS_FORCE_SCRIPT_NAME=/
- * PAPERLESS_STATIC_URL=/static/
- * 
- * # API Configuration
- * PAPERLESS_ENABLE_HTTP_REMOTE_USER=false
- * PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME=HTTP_REMOTE_USER
- */
+if (typeof window !== 'undefined') {
+    window.validateConfig = validateConfig;
+    window.getFullConfig = getFullConfig;
+    window.initConfig = initConfig;
+}
+
+// ============================================================================
+// EXEMPLO DE USO
+// ============================================================================
+
+/*
+// 1. Incluir o arquivo de configuração
+<script src="config/config.js"></script>
+
+// 2. Inicializar
+try {
+    initConfig();
+    console.log('Sistema pronto para uso!');
+} catch (error) {
+    console.error('Erro na inicialização:', error.message);
+}
+
+// 3. Usar as configurações
+const apiClient = new PaperlessAPIClient({
+    url: PaperlessConfig.apiUrl,
+    token: PaperlessConfig.apiToken,
+    timeout: PaperlessConfig.timeout
+});
+
+// 4. Buscar documentos
+apiClient.searchDocuments('contrato')
+    .then(results => {
+        console.log('Documentos encontrados:', results);
+    })
+    .catch(error => {
+        console.error('Erro na busca:', error);
+    });
+*/
