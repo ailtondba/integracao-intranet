@@ -1,453 +1,466 @@
-# Guia de Instalação - Integração Paperless-NGX com Intranet
+# 🚀 Guia de Instalação Completo - Paperless-NGX Intranet
 
-## Pré-requisitos
+<div align="center">
 
-### Conhecimentos Necessários
-- Administração básica de servidores Linux/Windows
-- Conceitos de API REST
-- HTML, CSS e JavaScript básico
-- Docker (opcional, mas recomendado)
+![Installation Guide](https://img.shields.io/badge/Guia-Instalação-blue?style=for-the-badge&logo=docker)
+![Difficulty](https://img.shields.io/badge/Dificuldade-Intermediário-orange?style=for-the-badge)
+![Time](https://img.shields.io/badge/Tempo-30--45min-green?style=for-the-badge&logo=clock)
 
-### Requisitos do Sistema
-- Paperless-NGX funcionando (versão 1.17.0 ou superior)
-- Servidor web (Apache, Nginx, IIS)
-- Acesso à rede onde o Paperless-NGX está rodando
-- Token de API válido do Paperless-NGX
+**Guia passo a passo para instalação e configuração completa**
 
-## Opções de Integração
-
-### 1. Integração Simples (iframe)
-**Vantagens:**
-- Implementação rápida (5-10 minutos)
-- Mantém todas as funcionalidades do Paperless-NGX
-- Atualizações automáticas da interface
-
-**Desvantagens:**
-- Menos controle sobre o layout
-- Pode ter problemas de responsividade
-- Limitações de personalização
-
-### 2. Integração Avançada (API REST)
-**Vantagens:**
-- Controle total sobre a interface
-- Integração com sistemas existentes
-- Personalização completa
-
-**Desvantagens:**
-- Desenvolvimento mais complexo
-- Manutenção necessária
-- Conhecimento técnico maior
-
-## Instalação Passo a Passo
-
-### Etapa 1: Preparação do Ambiente
-
-1. **Verificar se o Paperless-NGX está funcionando:**
-   ```bash
-   curl http://localhost:8000/api/
-   ```
-
-2. **Criar diretório para a integração:**
-   ```bash
-   mkdir /var/www/paperless-intranet
-   cd /var/www/paperless-intranet
-   ```
-
-### Etapa 2: Configuração do Paperless-NGX
-
-1. **Obter Token de API:**
-   - Acesse: `http://seu-servidor:8000/admin/authtoken/tokenproxy/`
-   - Ou via interface: Settings → API Tokens
-   - Gere um novo token e anote-o
-
-2. **Configurar CORS (Cross-Origin Resource Sharing):**
-   
-   Adicione no arquivo `docker-compose.env`:
-   ```env
-   PAPERLESS_CORS_ALLOWED_HOSTS=http://localhost,http://seu-servidor-intranet
-   PAPERLESS_ALLOWED_HOSTS=localhost,seu-servidor-intranet
-   ```
-
-   Ou se usando instalação direta, no `paperless.conf`:
-   ```ini
-   PAPERLESS_CORS_ALLOWED_HOSTS=http://localhost,http://seu-servidor-intranet
-   PAPERLESS_ALLOWED_HOSTS=localhost,seu-servidor-intranet
-   ```
-
-3. **Reiniciar o Paperless-NGX:**
-   ```bash
-   docker-compose restart  # Se usando Docker
-   # ou
-   systemctl restart paperless-ngx  # Se instalação direta
-   ```
-
-### Etapa 3: Configuração da Integração
-
-1. **Baixar os arquivos de exemplo:**
-   ```bash
-   wget https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/docs/examples/intranet-integration.html
-   ```
-
-2. **Configurar o arquivo de configuração:**
-   
-   Crie `config.js`:
-   ```javascript
-   const CONFIG = {
-       // URL base do Paperless-NGX
-       PAPERLESS_URL: 'http://localhost:8000',
-       
-       // Token de API (NUNCA commitar em repositórios públicos)
-       API_TOKEN: 'seu-token-aqui',
-       
-       // Configurações da interface
-       ITEMS_PER_PAGE: 25,
-       SEARCH_DELAY: 300, // ms
-       
-       // Personalização
-       COMPANY_NAME: 'Sua Empresa',
-       LOGO_URL: '/assets/logo.png'
-   };
-   ```
-
-3. **Personalizar a interface (opcional):**
-   
-   Edite o arquivo HTML para incluir:
-   - Logo da empresa
-   - Cores corporativas
-   - Layout específico
-
-### Etapa 4: Configuração do Servidor Web
-
-#### Apache
-```apache
-<VirtualHost *:80>
-    ServerName intranet.suaempresa.com
-    DocumentRoot /var/www/paperless-intranet
-    
-    # Habilitar CORS se necessário
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
-    Header always set Access-Control-Allow-Headers "Authorization, Content-Type"
-    
-    # Configurações de segurança
-    <Directory "/var/www/paperless-intranet">
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-#### Nginx
-```nginx
-server {
-    listen 80;
-    server_name intranet.suaempresa.com;
-    root /var/www/paperless-intranet;
-    index index.html;
-    
-    # Configurações CORS
-    add_header Access-Control-Allow-Origin *;
-    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
-    add_header Access-Control-Allow-Headers "Authorization, Content-Type";
-    
-    location / {
-        try_files $uri $uri/ =404;
-    }
-}
-```
-
-### Etapa 5: Teste da Integração
-
-1. **Teste básico da API:**
-   ```bash
-   curl -H "Authorization: Token SEU_TOKEN" \
-        http://localhost:8000/api/documents/
-   ```
-
-2. **Teste via navegador:**
-   - Acesse: `http://intranet.suaempresa.com`
-   - Verifique se a busca funciona
-   - Teste o download de documentos
-
-3. **Verificar logs:**
-   ```bash
-   # Logs do Paperless-NGX
-   docker-compose logs paperless
-   
-   # Logs do servidor web
-   tail -f /var/log/apache2/error.log
-   # ou
-   tail -f /var/log/nginx/error.log
-   ```
-
-## Configurações Avançadas
-
-### Opções de Servidor
-
-#### Apache com SSL
-```apache
-<VirtualHost *:443>
-    ServerName intranet.suaempresa.com
-    DocumentRoot /var/www/paperless-intranet
-    
-    SSLEngine on
-    SSLCertificateFile /path/to/certificate.crt
-    SSLCertificateKeyFile /path/to/private.key
-    
-    # Configurações de segurança
-    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-    Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
-</VirtualHost>
-```
-
-#### Nginx com SSL
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name intranet.suaempresa.com;
-    
-    ssl_certificate /path/to/certificate.crt;
-    ssl_certificate_key /path/to/private.key;
-    
-    # Configurações de segurança
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options DENY;
-    
-    root /var/www/paperless-intranet;
-    index index.html;
-}
-```
-
-### Personalização da Interface
-
-1. **Cores corporativas:**
-   ```css
-   :root {
-       --primary-color: #your-brand-color;
-       --secondary-color: #your-secondary-color;
-       --background-color: #f5f5f5;
-   }
-   ```
-
-2. **Logo da empresa:**
-   ```html
-   <div class="header">
-       <img src="/assets/logo.png" alt="Logo da Empresa" class="logo">
-       <h1>Sistema de Documentos</h1>
-   </div>
-   ```
-
-### Integração com SSO (Single Sign-On)
-
-#### OAuth2 com Active Directory
-```javascript
-// Exemplo de integração com OAuth2
-function authenticateUser() {
-    const authUrl = 'https://login.microsoftonline.com/tenant-id/oauth2/v2.0/authorize';
-    const params = new URLSearchParams({
-        client_id: 'your-client-id',
-        response_type: 'code',
-        redirect_uri: window.location.origin + '/callback',
-        scope: 'openid profile email'
-    });
-    
-    window.location.href = `${authUrl}?${params}`;
-}
-```
-
-### Monitoramento e Logs
-
-1. **Google Analytics (opcional):**
-   ```html
-   <!-- Global site tag (gtag.js) - Google Analytics -->
-   <script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
-   <script>
-     window.dataLayer = window.dataLayer || [];
-     function gtag(){dataLayer.push(arguments);}
-     gtag('js', new Date());
-     gtag('config', 'GA_TRACKING_ID');
-   </script>
-   ```
-
-2. **Logs customizados:**
-   ```javascript
-   function logSearch(query, results) {
-       fetch('/api/log', {
-           method: 'POST',
-           headers: {'Content-Type': 'application/json'},
-           body: JSON.stringify({
-               action: 'search',
-               query: query,
-               results_count: results.length,
-               timestamp: new Date().toISOString()
-           })
-       });
-   }
-   ```
-
-## Segurança
-
-### Boas Práticas
-
-1. **HTTPS obrigatório em produção**
-2. **Validação de entrada:**
-   ```javascript
-   function sanitizeInput(input) {
-       return input.replace(/[<>"'&]/g, function(match) {
-           const escape = {
-               '<': '&lt;',
-               '>': '&gt;',
-               '"': '&quot;',
-               "'": '&#39;',
-               '&': '&amp;'
-           };
-           return escape[match];
-       });
-   }
-   ```
-
-3. **Rate limiting:**
-   ```javascript
-   const rateLimiter = {
-       requests: new Map(),
-       limit: 100, // requests per minute
-       
-       check(ip) {
-           const now = Date.now();
-           const requests = this.requests.get(ip) || [];
-           const recent = requests.filter(time => now - time < 60000);
-           
-           if (recent.length >= this.limit) {
-               return false;
-           }
-           
-           recent.push(now);
-           this.requests.set(ip, recent);
-           return true;
-       }
-   };
-   ```
-
-4. **Configuração de CORS restritiva:**
-   ```env
-   PAPERLESS_CORS_ALLOWED_HOSTS=https://intranet.suaempresa.com
-   ```
-
-## Solução de Problemas
-
-### Problemas Comuns
-
-#### 1. Erro de CORS
-**Sintoma:** Console do navegador mostra erro "blocked by CORS policy"
-
-**Solução:**
-```bash
-# Verificar configuração CORS
-grep CORS /path/to/docker-compose.env
-
-# Adicionar domínio correto
-echo "PAPERLESS_CORS_ALLOWED_HOSTS=https://seu-dominio.com" >> docker-compose.env
-
-# Reiniciar serviço
-docker-compose restart
-```
-
-#### 2. Token de API inválido
-**Sintoma:** Erro 401 Unauthorized
-
-**Solução:**
-```bash
-# Verificar token via API
-curl -H "Authorization: Token SEU_TOKEN" http://localhost:8000/api/
-
-# Gerar novo token se necessário
-docker-compose exec paperless python manage.py drf_create_token username
-```
-
-#### 3. Documentos não aparecem
-**Sintoma:** Busca retorna vazia mesmo com documentos no sistema
-
-**Verificações:**
-1. Verificar permissões do usuário
-2. Confirmar que os documentos foram processados
-3. Testar busca diretamente na interface do Paperless-NGX
-
-#### 4. Erro de rede
-**Sintoma:** "Network Error" ou timeout
-
-**Diagnóstico:**
-```bash
-# Testar conectividade
-telnet paperless-server 8000
-
-# Verificar firewall
-sudo ufw status
-
-# Verificar logs do servidor
-docker-compose logs paperless
-```
-
-### Debug Avançado
-
-1. **Console do navegador:**
-   - Abrir DevTools (F12)
-   - Verificar aba Console para erros JavaScript
-   - Verificar aba Network para requisições falhando
-
-2. **Logs do Paperless-NGX:**
-   ```bash
-   # Aumentar nível de log
-   echo "PAPERLESS_LOGGING_DIR=/usr/src/paperless/logs" >> docker-compose.env
-   echo "PAPERLESS_LOGROTATE_MAX_SIZE=1024000" >> docker-compose.env
-   
-   # Visualizar logs em tempo real
-   docker-compose logs -f paperless
-   ```
-
-3. **Teste de API manual:**
-   ```bash
-   # Listar documentos
-   curl -v -H "Authorization: Token SEU_TOKEN" \
-        "http://localhost:8000/api/documents/?query=test"
-   
-   # Verificar metadados
-   curl -H "Authorization: Token SEU_TOKEN" \
-        "http://localhost:8000/api/documents/1/"
-   ```
-
-## Recursos de Suporte
-
-### Documentação Oficial
-- [API do Paperless-NGX](https://docs.paperless-ngx.com/api/)
-- [Configuração CORS](https://docs.paperless-ngx.com/configuration/#cors)
-- [Tokens de API](https://docs.paperless-ngx.com/api/#authorization)
-
-### Comunidade
-- [GitHub Issues](https://github.com/paperless-ngx/paperless-ngx/issues)
-- [Reddit r/paperless](https://reddit.com/r/paperless)
-- [Discord Server](https://discord.gg/paperless)
-
-### Ferramentas de Debug
-- [Postman](https://www.postman.com/) - Teste de APIs
-- [curl](https://curl.se/) - Linha de comando
-- [Browser DevTools](https://developer.chrome.com/docs/devtools/) - Debug frontend
-
-## Checklist Final de Instalação
-
-- [ ] Paperless-NGX funcionando e acessível
-- [ ] Token de API gerado e testado
-- [ ] CORS configurado corretamente
-- [ ] Arquivos da integração no servidor web
-- [ ] Configuração do servidor web (Apache/Nginx)
-- [ ] Teste de busca funcionando
-- [ ] Download de documentos funcionando
-- [ ] HTTPS configurado (produção)
-- [ ] Logs configurados
-- [ ] Backup da configuração realizado
-- [ ] Documentação entregue à equipe
+</div>
 
 ---
 
-**Nota:** Este guia assume conhecimento básico de administração de sistemas. Para ambientes de produção, sempre consulte sua equipe de segurança antes da implementação.
+## 📋 Pré-requisitos
+
+### 🖥️ Requisitos de Sistema
+
+| Componente | Mínimo | Recomendado | Observações |
+|------------|--------|-------------|-------------|
+| **CPU** | 2 cores | 4+ cores | Para OCR e processamento |
+| **RAM** | 4GB | 8GB+ | PostgreSQL + Redis + Paperless |
+| **Disco** | 20GB | 100GB+ | Documentos + backups |
+| **OS** | Ubuntu 20.04+ | Ubuntu 22.04 LTS | Debian/CentOS também suportados |
+
+### 🐳 Software Necessário
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install -y curl wget git nano
+
+# Instalar Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Instalar Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verificar instalação
+docker --version
+docker-compose --version
+```
+
+### 🔧 Configurações de Sistema
+
+```bash
+# Aumentar limites de arquivo (recomendado)
+echo "* soft nofile 65536" | sudo tee -a /etc/security/limits.conf
+echo "* hard nofile 65536" | sudo tee -a /etc/security/limits.conf
+
+# Configurar swap (se necessário)
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+---
+
+## 📦 Instalação Passo a Passo
+
+### 1️⃣ Preparação do Ambiente
+
+```bash
+# Criar diretório do projeto
+sudo mkdir -p /opt/paperless-ngx
+sudo chown $USER:$USER /opt/paperless-ngx
+cd /opt/paperless-ngx
+
+# Clonar o repositório
+git clone https://github.com/ailtondba/integracao-intranet.git .
+
+# Verificar estrutura
+ls -la
+```
+
+### 2️⃣ Configuração de Variáveis de Ambiente
+
+```bash
+# Copiar arquivo de exemplo
+cp docker-compose.env docker-compose.env.local
+
+# Gerar chave secreta
+echo "PAPERLESS_SECRET_KEY=$(openssl rand -base64 32)" >> docker-compose.env.local
+
+# Editar configurações
+nano docker-compose.env.local
+```
+
+#### 🔑 Configurações Essenciais
+
+```bash
+# === CONFIGURAÇÕES BÁSICAS ===
+PAPERLESS_SECRET_KEY="sua-chave-gerada-automaticamente"
+PAPERLESS_URL="https://paperless.suaempresa.com"
+PAPERLESS_ALLOWED_HOSTS="paperless.suaempresa.com,localhost,127.0.0.1"
+
+# === USUÁRIO ADMINISTRADOR ===
+PAPERLESS_ADMIN_USER="admin"
+PAPERLESS_ADMIN_PASSWORD="SenhaSegura123!"
+PAPERLESS_ADMIN_MAIL="admin@suaempresa.com"
+
+# === BANCO DE DADOS ===
+POSTGRES_DB="paperless"
+POSTGRES_USER="paperless"
+POSTGRES_PASSWORD="SenhaBanco123!"
+
+# === CORS PARA INTRANET ===
+PAPERLESS_CORS_ALLOWED_HOSTS="https://intranet.suaempresa.com,https://portal.suaempresa.com"
+
+# === OCR E IDIOMAS ===
+PAPERLESS_OCR_LANGUAGE="por+eng"
+PAPERLESS_OCR_MODE="skip_archive"
+
+# === TIMEZONE ===
+PAPERLESS_TIME_ZONE="America/Sao_Paulo"
+```
+
+### 3️⃣ Configuração SSL/TLS (Produção)
+
+```bash
+# Criar diretório SSL
+mkdir -p nginx/ssl
+
+# Opção 1: Certificado Let's Encrypt (Recomendado)
+sudo apt install certbot
+sudo certbot certonly --standalone -d paperless.suaempresa.com
+sudo cp /etc/letsencrypt/live/paperless.suaempresa.com/fullchain.pem nginx/ssl/
+sudo cp /etc/letsencrypt/live/paperless.suaempresa.com/privkey.pem nginx/ssl/
+
+# Opção 2: Certificado Auto-assinado (Desenvolvimento)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/ssl/paperless.key \
+  -out nginx/ssl/paperless.crt \
+  -subj "/C=BR/ST=SP/L=SaoPaulo/O=SuaEmpresa/CN=paperless.suaempresa.com"
+```
+
+### 4️⃣ Configuração do Nginx
+
+```bash
+# Editar configuração do Nginx
+nano nginx/nginx.conf
+```
+
+**Ajustar domínio e certificados:**
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name paperless.suaempresa.com;  # ← Alterar aqui
+    
+    # Certificados SSL
+    ssl_certificate /etc/nginx/ssl/paperless.crt;      # ← Verificar caminho
+    ssl_certificate_key /etc/nginx/ssl/paperless.key;  # ← Verificar caminho
+    
+    # CORS para intranet
+    add_header Access-Control-Allow-Origin "https://intranet.suaempresa.com" always;
+    # ... resto da configuração
+}
+```
+
+### 5️⃣ Inicialização dos Serviços
+
+```bash
+# Verificar configuração
+docker-compose config
+
+# Baixar imagens
+docker-compose pull
+
+# Iniciar em modo detached
+docker-compose up -d
+
+# Verificar status
+docker-compose ps
+```
+
+### 6️⃣ Verificação da Instalação
+
+```bash
+# Aguardar inicialização (pode levar alguns minutos)
+sleep 60
+
+# Verificar logs
+docker-compose logs webserver
+
+# Testar conectividade
+curl -f http://localhost:8000/api/ || echo "Aguardando inicialização..."
+
+# Verificar saúde dos containers
+docker-compose ps
+```
+
+---
+
+## 🔧 Configuração Pós-Instalação
+
+### 1️⃣ Primeiro Acesso
+
+1. **Acesse a interface web**: `https://paperless.suaempresa.com`
+2. **Login**: Use as credenciais definidas em `PAPERLESS_ADMIN_USER/PASSWORD`
+3. **Configurações iniciais**:
+   - Vá em **Settings** → **General**
+   - Configure timezone, idioma, etc.
+
+### 2️⃣ Configurar API Token
+
+```bash
+# Via interface web
+# Settings → API Tokens → Generate Token
+
+# Ou via comando
+docker-compose exec webserver python manage.py shell -c "
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+user = User.objects.get(username='admin')
+token, created = Token.objects.get_or_create(user=user)
+print(f'Token: {token.key}')
+"
+```
+
+### 3️⃣ Configurar Consumo de Documentos
+
+```bash
+# Criar diretórios de consumo
+sudo mkdir -p /opt/paperless-data/{consume,media,data,export}
+sudo chown -R 1000:1000 /opt/paperless-data
+
+# Configurar no docker-compose.env.local
+echo "PAPERLESS_CONSUMPTION_DIR=/usr/src/paperless/consume" >> docker-compose.env.local
+
+# Reiniciar para aplicar
+docker-compose restart webserver
+```
+
+### 4️⃣ Configurar Backup Automático
+
+```bash
+# Criar script de backup
+sudo tee /opt/paperless-ngx/backup.sh << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/opt/paperless-backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# Criar diretório de backup
+mkdir -p $BACKUP_DIR
+
+# Backup do banco de dados
+docker-compose exec -T db pg_dump -U paperless paperless > $BACKUP_DIR/db_$DATE.sql
+
+# Backup dos documentos
+docker-compose exec -T webserver python manage.py document_exporter $BACKUP_DIR/documents_$DATE
+
+# Compactar
+tar -czf $BACKUP_DIR/paperless_backup_$DATE.tar.gz $BACKUP_DIR/db_$DATE.sql $BACKUP_DIR/documents_$DATE
+
+# Limpar backups antigos (manter 7 dias)
+find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
+
+echo "Backup concluído: paperless_backup_$DATE.tar.gz"
+EOF
+
+# Tornar executável
+sudo chmod +x /opt/paperless-ngx/backup.sh
+
+# Configurar cron (backup diário às 2h)
+echo "0 2 * * * /opt/paperless-ngx/backup.sh" | sudo crontab -
+```
+
+---
+
+## 🔍 Testes e Validação
+
+### 1️⃣ Teste de API
+
+```bash
+# Definir variáveis
+API_URL="https://paperless.suaempresa.com/api"
+API_TOKEN="seu-token-aqui"
+
+# Testar autenticação
+curl -H "Authorization: Token $API_TOKEN" $API_URL/documents/ | jq .
+
+# Testar upload
+curl -X POST \
+  -H "Authorization: Token $API_TOKEN" \
+  -F "document=@exemplo.pdf" \
+  -F "title=Documento de Teste" \
+  $API_URL/documents/post_document/
+```
+
+### 2️⃣ Teste de Integração Intranet
+
+```bash
+# Testar CORS
+curl -H "Origin: https://intranet.suaempresa.com" \
+     -H "Access-Control-Request-Method: GET" \
+     -H "Access-Control-Request-Headers: Authorization" \
+     -X OPTIONS \
+     $API_URL/documents/
+```
+
+### 3️⃣ Teste de Performance
+
+```bash
+# Monitorar recursos
+docker stats --no-stream
+
+# Testar tempo de resposta
+time curl -s $API_URL/documents/ > /dev/null
+
+# Verificar logs de erro
+docker-compose logs --tail=50 webserver | grep ERROR
+```
+
+---
+
+## 🚨 Solução de Problemas
+
+### ❌ Problemas Comuns
+
+#### 1. Container não inicia
+
+```bash
+# Verificar logs
+docker-compose logs webserver
+
+# Verificar recursos
+df -h
+free -h
+
+# Reiniciar serviços
+docker-compose restart
+```
+
+#### 2. Erro de permissão
+
+```bash
+# Corrigir permissões
+sudo chown -R 1000:1000 /opt/paperless-data
+sudo chmod -R 755 /opt/paperless-data
+```
+
+#### 3. Problema de SSL
+
+```bash
+# Verificar certificados
+openssl x509 -in nginx/ssl/paperless.crt -text -noout
+
+# Testar SSL
+openssl s_client -connect paperless.suaempresa.com:443
+```
+
+#### 4. Erro de CORS
+
+```bash
+# Verificar configuração
+grep CORS docker-compose.env.local
+
+# Adicionar domínio
+echo "PAPERLESS_CORS_ALLOWED_HOSTS=https://seu-novo-dominio.com" >> docker-compose.env.local
+docker-compose restart webserver
+```
+
+### 🔧 Comandos de Manutenção
+
+```bash
+# Reindexar documentos
+docker-compose exec webserver python manage.py document_index reindex
+
+# Limpar cache
+docker-compose exec redis redis-cli FLUSHALL
+
+# Atualizar sistema
+docker-compose pull
+docker-compose up -d
+
+# Verificar integridade do banco
+docker-compose exec db psql -U paperless -c "\dt"
+```
+
+---
+
+## 📊 Monitoramento
+
+### 1️⃣ Health Checks
+
+```bash
+# Script de monitoramento
+sudo tee /opt/paperless-ngx/monitor.sh << 'EOF'
+#!/bin/bash
+
+# Verificar API
+if ! curl -f -s https://paperless.suaempresa.com/api/ > /dev/null; then
+    echo "ERRO: API não responde"
+    exit 1
+fi
+
+# Verificar banco
+if ! docker-compose exec -T db pg_isready -U paperless > /dev/null; then
+    echo "ERRO: Banco não responde"
+    exit 1
+fi
+
+# Verificar espaço em disco
+USAGE=$(df /opt/paperless-data | tail -1 | awk '{print $5}' | sed 's/%//')
+if [ $USAGE -gt 90 ]; then
+    echo "AVISO: Disco com ${USAGE}% de uso"
+fi
+
+echo "Sistema OK"
+EOF
+
+sudo chmod +x /opt/paperless-ngx/monitor.sh
+```
+
+### 2️⃣ Logs Centralizados
+
+```bash
+# Configurar logrotate
+sudo tee /etc/logrotate.d/paperless << 'EOF'
+/opt/paperless-ngx/logs/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    copytruncate
+}
+EOF
+```
+
+---
+
+## 🎯 Próximos Passos
+
+1. **📚 Leia a documentação técnica**: [`DOCUMENTACAO_TECNICA.md`](DOCUMENTACAO_TECNICA.md)
+2. **🧪 Teste os exemplos**: Pasta [`exemplos/`](exemplos/)
+3. **🔧 Configure integrações**: Adapte para sua intranet
+4. **📊 Configure monitoramento**: Implemente alertas
+5. **👥 Treine usuários**: Documente processos internos
+
+---
+
+## 📞 Suporte
+
+Se encontrar problemas durante a instalação:
+
+- 📧 **Issues**: [GitHub Issues](https://github.com/ailtondba/integracao-intranet/issues)
+- 📖 **Documentação**: [Paperless-NGX Docs](https://docs.paperless-ngx.com/)
+- 💬 **Comunidade**: [Discord Paperless-NGX](https://discord.gg/paperless)
+
+---
+
+<div align="center">
+
+**✅ Instalação concluída com sucesso!**
+
+[⬆️ Voltar ao README](README.md) • [📖 Documentação Técnica](DOCUMENTACAO_TECNICA.md)
+
+</div>
